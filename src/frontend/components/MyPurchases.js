@@ -6,8 +6,9 @@ export default function MyPurchases({ nftmarket, nft, account }) {
   const [loading, setLoading] = useState(true)
   const [purchases, setPurchases] = useState([])
   const loadPurchasedItems = async () => {
+
     // Fetch purchased items from marketplace by quering Offered events with the buyer set as the user
-    const filter =  nftmarket.filters.Bought(null,null,null,null,null,account)
+    const filter =  nftmarket.filters.ProductSold(null,null,null,null, account, null, null)
     const results = await nftmarket.queryFilter(filter)
     //Fetch metadata of each nft and add that to listedItem object.
     const purchases = await Promise.all(results.map(async i => {
@@ -51,6 +52,9 @@ export default function MyPurchases({ nftmarket, nft, account }) {
               <Col key={idx} className="overflow-hidden">
                 <Card>
                   <Card.Img variant="top" src={item.image} />
+                  <Card.Body color="secondary">
+                  <Card.Title>{item.name}</Card.Title>
+                  </Card.Body>
                   <Card.Footer>{ethers.utils.formatEther(item.totalPrice)} ETH</Card.Footer>
                 </Card>
               </Col>

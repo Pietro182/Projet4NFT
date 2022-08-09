@@ -6,11 +6,15 @@ function renderSoldItems(items) {
   return (
     <>
       <h2>Item sold</h2>
+      <div className="px-5 container">
       <Row xs={1} md={2} lg={4} className="g-4 py-3">
         {items.map((item, idx) => (
           <Col key={idx} className="overflow-hidden">
             <Card>
               <Card.Img variant="top" src={item.image} />
+              <Card.Body color="secondary">
+                  <Card.Title>{item.name}</Card.Title>
+              </Card.Body>
               <Card.Footer>
                 For {ethers.utils.formatEther(item.totalPrice)} ETH - Recieved {ethers.utils.formatEther(item.price)} ETH
               </Card.Footer>
@@ -18,6 +22,7 @@ function renderSoldItems(items) {
           </Col>
         ))}
       </Row>
+      </div>
     </>
   )
 }
@@ -32,7 +37,7 @@ export default function MyListedItems({ nftmarket, nft, account }) {
     let listedItems = []
     let soldItems = []
     for (let indx = 1; indx <= itemCount; indx++) {
-      const i = await nftmarket.items(indx)
+      const i = await nftmarket.idMarketItem(indx)
       if (i.seller.toLowerCase() === account) {
         // get uri url from nft contract
         const uri = await nft.tokenURI(i.tokenId)
@@ -71,12 +76,18 @@ export default function MyListedItems({ nftmarket, nft, account }) {
     <div className="flex justify-center">
       {listedItems.length > 0 ?
         <div className="px-5 py-3 container">
-            <h2>Listed</h2>
+            <h2>Listed Items</h2>
           <Row xs={1} md={2} lg={4} className="g-4 py-3">
             {listedItems.map((item, idx) => (
               <Col key={idx} className="overflow-hidden">
                 <Card>
                   <Card.Img variant="top" src={item.image} />
+                  <Card.Body color="secondary">
+                    <Card.Title>{item.name}</Card.Title>
+                    <Card.Text>
+                      {item.description}
+                    </Card.Text>
+                  </Card.Body>
                   <Card.Footer>{ethers.utils.formatEther(item.totalPrice)} ETH</Card.Footer>
                 </Card>
               </Col>

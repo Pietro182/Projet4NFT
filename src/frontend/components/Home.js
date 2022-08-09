@@ -35,7 +35,7 @@ const Home = ({ nftmarket, nft }) => {
   }
 
   const buyMarketItem = async (item) => {
-    await (await nftmarket.createMarketSale(nft.address, item.itemId, {value: item.price})).wait()
+    await (await nftmarket.purchaseItem(item.itemId, { value: item.totalPrice })).wait()
     loadMarketplaceItems()
   }
 

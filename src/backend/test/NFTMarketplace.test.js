@@ -210,6 +210,7 @@ listingPrice = await nftmarket.getListingPrice();
 
 describe("Purchasing marketplace items", function () {
   let price = 2;
+  let totalPrice;
   let NFT;
   let nft;
   let NFTMarket;
@@ -237,6 +238,12 @@ describe("Purchasing marketplace items", function () {
     // addr1 makes their nft a marketplace item.
     listingPrice = await nftmarket.getListingPrice();
     await nftmarket.connect(addr1).createMarketItem(nft.address, 1, toWei(price), 1, {value: listingPrice})
+    // get the Total price
+    listingPrice = await nftmarket.getListingPrice();
+    let c = ethers.BigNumber.from(toWei(price));
+    let d = ethers.BigNumber.from(listingPrice);
+    totalPrice = c.add(d);
+
   })
 
   
@@ -245,10 +252,10 @@ describe("Purchasing marketplace items", function () {
 
     const feeMarketplaceOwnerInitialEthBal = await deployer.getBalance()
 
-   
-    // addr 2 purchases item.
 
-    await expect(nftmarket.connect(addr2).createMarketSale(nft.address, 1, {value: toWei(price)}))
+
+    // addr 2 purchases item.
+    await expect(nftmarket.connect(addr2).purchaseItem(1, {value: totalPrice}))
     .to.emit(nftmarket, "ProductSold")
       .withArgs(
         1,
@@ -280,30 +287,22 @@ describe("Purchasing marketplace items", function () {
     expect(await nft.ownerOf(1)).to.equal(addr2.address);
   })
 
-  it("Should fail for invalid item ids, sold items and when not enough ether is paid", async function () {
-   
-   /*
-    // fails for invalid item ids
-    await expect(
-      nftmarket.connect(addr2).createMarketSale(nft.address, 2, {value: toWei(price)})
-    ).to.be.revertedWith("item doesn't exist");
-    await expect(
-      nftmarket.connect(addr2).createMarketSale(nft.address, 0, {value: toWei(price)})
-    ).to.be.revertedWith("item doesn't exist");
-   */
-
+ 
+  it("Should fail for old items and when not enough ether is paid", async function () {
+  
     // Fails when not enough ether is paid with the transaction. 
     // In this instance, fails when buyer only sends enough ether to cover the price of the nft
     // not the additional market fee.
     await expect(
-      nftmarket.connect(addr1).createMarketSale(nft.address, 1, {value: toWei(1)})
-    ).to.be.revertedWith("Please submit the asking price in order to complete purchase"); 
+      nftmarket.connect(addr1).purchaseItem(1, {value: toWei(1)})
+    ).to.be.revertedWith("not enough ether to cover item price and market fee"); 
     // addr2 purchases item 1
-    await nftmarket.connect(addr1).createMarketSale(nft.address, 1, {value: toWei(price)})
+    await nftmarket.connect(addr2).purchaseItem(1, {value: totalPrice})
     // addr3 tries purchasing item 1 after its been sold 
     const addr3 = addrs[0]
     await expect(
-      nftmarket.connect(addr2).createMarketSale(nft.address, 1, {value: toWei(price)})
+      nftmarket.connect(addr3).purchaseItem(1, {value: totalPrice})
     ).to.be.revertedWith("item already sold");
   });
+  
 })

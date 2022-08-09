@@ -1,3 +1,5 @@
+const hre = require("hardhat");
+
 async function main() {
 
   const [deployer] = await ethers.getSigners();
@@ -7,7 +9,7 @@ async function main() {
 
   // Get the ContractFactories and Signers here.
   const NFT = await hre.ethers.getContractFactory("NFT");
-  const nft = await NFT.deploy("Onsenfou", "OSF");
+  const nft = await NFT.deploy("myCollection", "MC");
   await nft.deployed();
   
   // deploy contracts

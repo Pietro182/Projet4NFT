@@ -70,9 +70,9 @@ contract NFTMarket is ReentrancyGuard {
     event ProductSold(
         uint256 indexed itemId,
         IERC721 indexed nftContract,
-        uint256 indexed tokenId,
+        uint256 tokenId,
         address seller,
-        address owner,
+        address indexed owner,
         uint256 price,
         bool sold
     );
@@ -140,42 +140,30 @@ contract NFTMarket is ReentrancyGuard {
             );
     }
 
-        /// @notice function to create a sale
-        function createMarketSale(
-            IERC721 nftContract,
-            uint256 itemId
-            ) public payable nonReentrant{
-                uint price = idMarketItem[itemId].price;
-                uint tokenId = idMarketItem[itemId].tokenId;
-                MarketItem storage item = idMarketItem[itemId];
-
-                require(msg.value == price, "Please submit the asking price in order to complete purchase");
-                require(!item.sold, "item already sold");
-
-           //pay the seller the amount
-           idMarketItem[itemId].seller.transfer(msg.value);
-
-             //transfer ownership of the nft from the contract itself to the buyer
-            IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
-
-            idMarketItem[itemId].owner = payable(msg.sender); //mark buyer as new owner
-            idMarketItem[itemId].sold = true; //mark that it has been sold
-            _itemsSold.increment(); //increment the total number of Items sold by 1
-            payable(owner).transfer(listingPrice); //pay owner of contract the listing price
-
-            // Anis
-            emit ProductSold(
-            idMarketItem[itemId].itemId,
-            idMarketItem[itemId].nftContract,
-            idMarketItem[itemId].tokenId,
-            idMarketItem[itemId].seller,
+        function purchaseItem(uint _itemId) external payable nonReentrant {
+        uint _totalPrice = getTotalPrice(_itemId);
+        MarketItem storage item = idMarketItem[_itemId];
+        //require(_itemId > 0 && _itemId <= itemCount, "item doesn't exist");
+        require(msg.value >= _totalPrice, "not enough ether to cover item price and market fee");
+        require(!item.sold, "item already sold");
+        // pay seller and feeAccount
+        item.seller.transfer(item.price);
+        owner.transfer(_totalPrice - item.price);
+        // update item to sold
+        item.sold = true;
+        // transfer nft to buyer
+        item.nftContract.transferFrom(address(this), msg.sender, item.tokenId);
+        // emit ProductSold event
+       emit ProductSold(
+           item.itemId,
+            item.nftContract,
+            item.tokenId,
+            item.seller,
             payable(msg.sender),
-            idMarketItem[itemId].price,
-            idMarketItem[itemId].sold
+            item.price,
+            item.sold
             );
-
-        }
-
+    }
 
         /// @notice total number of items unsold on our platform
         function fetchMarketItems() public view returns (MarketItem[] memory){
