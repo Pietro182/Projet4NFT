@@ -27,7 +27,7 @@ contract NFTMarket is ReentrancyGuard {
     }
 
     //people have to pay to buy their NFT on this marketplace
-    uint256 listingPrice = 0.025 ether;
+    uint256 public listingPrice = 0.025 ether;
 
     constructor(){
         owner = payable(msg.sender);
@@ -97,7 +97,6 @@ contract NFTMarket is ReentrancyGuard {
         uint256 collectionId
         ) public payable nonReentrant{
          require(price > 0, "Price must be above zero");
-         require(msg.value == listingPrice, "Price must be equal to listing price");
 
          _itemIds.increment(); //add 1 to the total number of items ever created
          uint256 itemId = _itemIds.current();
@@ -127,18 +126,6 @@ contract NFTMarket is ReentrancyGuard {
              collectionId
             );
         }
-/*
- constructor(address storeContractAddress) {
-        storeContract = IStore(storeContractAddress);
-        owner = msg.sender;
-    }
-
-    function attack() external payable onlyOwner {
-        storeContract.store{value: msg.value}();
-        storeContract.take();
-    }
-     IStore public immutable storeContract;
-*/
 
     function addCollectionToMapping(address _nftContract, string memory _description ) public {
          _collectionIds.increment(); //add 1 to the total number of collection ever created
@@ -150,7 +137,7 @@ contract NFTMarket is ReentrancyGuard {
              collectionId,
              collectionName,
              _description
-         );
+            );
     }
 
         /// @notice function to create a sale
@@ -160,8 +147,10 @@ contract NFTMarket is ReentrancyGuard {
             ) public payable nonReentrant{
                 uint price = idMarketItem[itemId].price;
                 uint tokenId = idMarketItem[itemId].tokenId;
+                MarketItem storage item = idMarketItem[itemId];
 
                 require(msg.value == price, "Please submit the asking price in order to complete purchase");
+                require(!item.sold, "item already sold");
 
            //pay the seller the amount
            idMarketItem[itemId].seller.transfer(msg.value);
@@ -279,6 +268,10 @@ contract NFTMarket is ReentrancyGuard {
             }
             return items;
 
+        }
+
+        function getTotalPrice(uint _itemId) view public returns(uint){
+        return(idMarketItem[_itemId].price+listingPrice);
         }
 /*
         function fetchArtistsCreations(address _artist) public view returns (MarketItem[] memory){

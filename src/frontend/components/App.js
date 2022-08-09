@@ -3,7 +3,6 @@ import {
   Routes,
   Route
 } from "react-router-dom";
-//import logo from './logo.png';
 import Navigation from './Navbar';
 import Home from './Home.js'
 import CreateNFT from './CreateNft.js'
@@ -25,7 +24,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [account, setAccount] = useState(null)
   const [nft, setNFT] = useState({})
-  const [marketplace, setMarketplace] = useState({})
+  const [nftmarket, setMarketplace] = useState({})
   // MetaMask Login/Connect
   const web3Handler = async () => {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -34,7 +33,7 @@ function App() {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     // Set signer
     const signer = provider.getSigner()
-  /*
+  
     window.ethereum.on('chainChanged', (chainId) => {
       window.location.reload();
     })
@@ -43,13 +42,13 @@ function App() {
       setAccount(accounts[0])
       await web3Handler()
     })
-  */
+    
     loadContracts(signer)
   }
   const loadContracts = async (signer) => {
     // Get deployed copies of contracts
-    const marketplace = new ethers.Contract(NFTMarketAddress.address, NFTMarketAbi.abi, signer)
-    setMarketplace(marketplace)
+    const nftmarket = new ethers.Contract(NFTMarketAddress.address, NFTMarketAbi.abi, signer)
+    setMarketplace(nftmarket)
     const nft = new ethers.Contract(NFTAddress.address, NFTAbi.abi, signer)
     setNFT(nft)
     setLoading(false)
@@ -58,7 +57,7 @@ function App() {
 
   return (
     <BrowserRouter>
-    <div>
+    <div className="App">
      <Navigation web3Handler={web3Handler} account={account} />
 
      <div>
@@ -70,11 +69,18 @@ function App() {
           ) : (
             <Routes>
               <Route path="/" element={
-                <Home marketplace={marketplace} nft={nft} />
+                <Home nftmarket={nftmarket} nft={nft} />
+              } />              
+              <Route path="/create-collection"  />
+              <Route path="/create" element={
+                <CreateNFT nftmarket={nftmarket} nft={nft} />
               } />
-              <Route path="/create"  />
-              <Route path="/my-listed-items" />
-              <Route path="/my-purchases" />
+              <Route path="/my-listed-items" element={
+                <MyListedItems nftmarket={nftmarket} nft={nft} account={account} />
+              } />
+              <Route path="/my-purchases" element={
+                <MyPurchases nftmarket={nftmarket} nft={nft} account={account} />
+              } />
             </Routes>
           )}
           </div>
